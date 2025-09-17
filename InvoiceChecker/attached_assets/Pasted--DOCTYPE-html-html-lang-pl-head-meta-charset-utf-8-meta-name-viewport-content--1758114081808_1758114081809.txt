@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Faktura VAT {{invoice_number}}</title>
+  <style>
+    /* ===== Print layout (A4) ===== */
+    @page {
+      size: A4;
+      margin: 16mm 14mm 18mm 14mm;
+    }
+    :root {
+      --fg: #111;
+      --muted: #666;
+      --line: #d8d8d8;
+      --brand: #111;
+      --accent: #0a0a0a;
+      --sm: 11px;
+      --base: 12px;
+      --lg: 14px;
+    }
+    html, body { height: 100%; }
+    body {
+      font: var(--base)/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, sans-serif;
+      color: var(--fg);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      margin: 0;
+      background: #fff;
+    }
+
+    .doc {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+    }
+
+    .row { display: grid; gap: 12px; }
+
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 2fr 1fr 1fr; }
+
+    h1, h2, h3 { margin: 0; font-weight: 700; }
+    h1 { font-size: 18px; letter-spacing: 0.2px; text-align: left; }
+    h1 { font-size: 20px; letter-spacing: 0.2px; }
+    h2 { font-size: 15px; }
+    small { color: var(--muted); }
+
+    /* Header */
+    .header {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .brand {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    .brand h2 { letter-spacing: 0.2px; }
+    .brand .meta { margin-top: 6px; font-size: var(--sm); }
+    .invoice-tag {
+      text-align: left;
+    }
+    .invoice-tag h1 { text-transform: uppercase; }
+    .invoice-tag .copy { margin-top: 6px; }
+
+    /* Parties */
+    .parties {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .card h3 { font-size: var(--lg); margin-bottom: 6px; }
+    .card p { margin: 2px 0; }
+
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .meta-item { font-size: var(--sm); }
+
+    /* Items table */
+    table { width: 100%; border-collapse: collapse; }
+
+    .items { margin-top: 4px; }
+    .items th, .items td {
+      border: 1px solid var(--line);
+      padding: 6px 6px;
+      vertical-align: top;
+    }
+    .items thead th {
+      font-weight: 700;
+      font-size: 11px;
+      text-align: left;
+      background: #f7f7f7;
+    }
+    .items td { font-size: var(--base); }
+    .items .num { text-align: right; white-space: nowrap; }
+    .items .center { text-align: center; }
+
+    .totals-wrap { display: grid; grid-template-columns: 1fr 260px; gap: 12px; margin-top: 10px; }
+
+    .vat-summary th, .vat-summary td {
+      border: 1px solid var(--line);
+      padding: 6px 6px;
+      font-size: var(--base);
+    }
+    .vat-summary thead th { background: #f7f7f7; font-size: 11px; }
+
+    .grand {
+      border: 2px solid var(--accent);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: var(--lg);
+      margin-left: auto;
+    }
+    .grand .row { display: grid; grid-template-columns: 1fr auto; }
+    .grand .label { color: var(--muted); }
+    .grand .value { font-weight: 700; font-size: 16px; }
+
+    .notes {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;
+    }
+    .note { font-size: var(--base); }
+
+    .signatures {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 28px;
+    }
+    .sig-box {
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      text-align: center;
+      font-size: var(--sm);
+      color: var(--muted);
+    }
+
+    .continue {
+      margin-top: 8px; font-size: var(--sm); color: var(--muted);
+    }
+
+    /* Utilities */
+    .muted { color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .nowrap { white-space: nowrap; }
+
+    /* Page breaks for long item lists */
+    .page-break { page-break-before: always; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <div class="doc">
+    <!-- Header -->
+    <header class="header">
+      <section class="brand">
+        <h2>{{seller.name}}</h2>
+        <div class="meta">
+          <div>{{seller.address_line_1}}</div>
+          <div>{{seller.address_line_2}}</div>
+          <div>Tel.: {{seller.phone}} <span class="nowrap">&nbsp; NIP: {{seller.nip}}</span></div>
+          <div>{{seller.bank_name}}; {{seller.bank_branch_address}}</div>
+          <div class="mono">{{seller.iban}}</div>
+        </div>
+      </section>
+      <section class="invoice-tag">
+        <h1>Faktura VAT <span class="mono">{{invoice_number}}</span> <small class="muted">{{copy_type}}</small></h1>
+        <div class="copy muted">Miejsce wystawienia: <b>{{issue_place}}</b></div>
+        <div class="copy muted">Data wystawienia: <b>{{issue_date}}</b></div>
+        <div class="copy muted">Data zakończenia dostawy/usług: <b>{{delivery_date}}</b></div>
+      </section>
+    </header>
+
+    <!-- Parties -->
+    <section class="parties">
+      <div class="card">
+        <h3>Sprzedawca</h3>
+        <p><b>{{seller.name}}</b></p>
+        <p>NIP: <span class="mono">{{seller.nip}}</span></p>
+        <p>{{seller.address_line_1}}</p>
+        <p>{{seller.address_line_2}}</p>
+      </div>
+      <div class="card">
+        <h3>Nabywca</h3>
+        <p><b>{{buyer.name}}</b></p>
+        <p>NIP: <span class="mono">{{buyer.nip}}</span></p>
+        <p>{{buyer.address_line_1}}</p>
+        <p>{{buyer.address_line_2}}</p>
+      </div>
+    </section>
+
+    <!-- Items -->
+    <section>
+      <table class="items">
+        <thead>
+          <tr>
+            <th style="width:28px">Lp</th>
+            <th style="width:22%">Nazwa</th>
+            <th style="width:11%">Kod</th>
+            <th style="width:9%">CN/PKWiU</th>
+            <th style="width:7%" class="center">Ilość</th>
+            <th style="width:7%" class="center">j.m.</th>
+            <th style="width:11%" class="num">Cena jednostkowa<br><small>netto</small></th>
+            <th style="width:6%" class="center">VAT<br><small>%</small></th>
+            <th style="width:11%" class="num">Wartość<br><small>netto</small></th>
+            <th style="width:11%" class="num">Kwota<br><small>VAT</small></th>
+            <th style="width:11%" class="num">Wartość<br><small>brutto</small></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Repeat <tr> for each item -->
+          {{#items}}
+          <tr>
+            <td class="center">{{lp}}</td>
+            <td>{{name}}</td>
+            <td class="mono">{{code}}</td>
+            <td class="mono">{{cn_pkwiu}}</td>
+            <td class="center">{{qty}}</td>
+            <td class="center">{{uom}}</td>
+            <td class="num">{{unit_net}}</td>
+            <td class="center">{{vat_rate}}</td>
+            <td class="num">{{net}}</td>
+            <td class="num">{{vat}}</td>
+            <td class="num">{{gross}}</td>
+          </tr>
+          {{/items}}
+        </tbody>
+      </table>
+      <div class="continue">{{continue_note}}</div>
+    </section>
+
+    <!-- Totals & VAT summary -->
+    <section class="totals-wrap">
+      <div></div>
+      <aside>
+        <table class="vat-summary">
+          <thead>
+            <tr>
+              <th>według stawki VAT</th>
+              <th class="num">wartość netto</th>
+              <th class="num">kwota VAT</th>
+              <th class="num">wartość brutto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#vat_rows}}
+            <tr>
+              <td>Podstawowy podatek VAT {{rate}}%</td>
+              <td class="num">{{net}}</td>
+              <td class="num">{{vat}}</td>
+              <td class="num">{{gross}}</td>
+            </tr>
+            {{/vat_rows}}
+            <tr>
+              <td><b>Razem:</b></td>
+              <td class="num"><b>{{sum_net}}</b></td>
+              <td class="num"><b>{{sum_vat}}</b></td>
+              <td class="num"><b>{{sum_gross}}</b></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="grand" style="margin-top:10px">
+          <div class="row"><div class="label">Razem do zapłaty</div><div class="value mono">{{total_due}}</div></div>
+          <div class="row"><div class="label">Słownie</div><div>{{amount_in_words}}</div></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Notes & meta -->
+    <section class="notes">
+      <div class="note">
+        <div><b>Pozostało do zapłaty:</b> <span class="mono">{{balance_due}}</span></div>
+        <div><b>W terminie:</b> {{payment_terms}} <small class="muted">({{payment_type}})</small></div>
+        <div class="muted">Uwagi do dokumentu: {{document_notes}}</div>
+      </div>
+      <div class="note">
+        <div>Dotyczy szkody: <span class="mono">{{claim_number}}</span></div>
+        <div>Pojazd: <span class="mono">{{vehicle}}</span></div>
+      </div>
+    </section>
+
+    <!-- Signatures -->
+    <section class="signatures">
+      <div class="sig-box">Podpis osoby upoważnionej do odbioru faktury VAT</div>
+      <div class="sig-box">Podpis osoby upoważnionej do wystawienia faktury VAT</div>
+    </section>
+  </div>
+
+  <!-- Optional helpers (screen only) -->
+  <div class="no-print" style="margin-top:18px; display:flex; gap:8px;">
+    <button onclick="window.print()">Drukuj</button>
+  </div>
+</body>
+</html>
