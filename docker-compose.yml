@@ -1,26 +1,29 @@
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: invoice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d invoice"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "5432:5432"
   invoice-app:
     build:
       context: .
+      dockerfile: Dockerfile
       target: production
-    depends_on:
-      db:
-        condition: service_healthy
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/invoice
-      DATABASE_USE_NEON_WEBSOCKETS: "false"
-    command: ["node", "dist/index.js"]
-    tty: true
+      DATABASE_URL: ${DATABASE_URL}
+      AUTOMATION_SECRET: ${AUTOMATION_SECRET}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-}
+      WEBHOOK_ALLOWED_DOMAINS: ${WEBHOOK_ALLOWED_DOMAINS:-localhost,127.0.0.1}
+      DEFAULT_SELLER_NAME: ${DEFAULT_SELLER_NAME:-}
+      DEFAULT_SELLER_NIP: ${DEFAULT_SELLER_NIP:-}
+      DEFAULT_SELLER_ADDRESS_1: ${DEFAULT_SELLER_ADDRESS_1:-}
+      DEFAULT_SELLER_ADDRESS_2: ${DEFAULT_SELLER_ADDRESS_2:-}
+      DEFAULT_SELLER_PHONE: ${DEFAULT_SELLER_PHONE:-}
+      DEFAULT_SELLER_BANK: ${DEFAULT_SELLER_BANK:-}
+      DEFAULT_SELLER_BANK_ADDRESS: ${DEFAULT_SELLER_BANK_ADDRESS:-}
+      DEFAULT_SELLER_IBAN: ${DEFAULT_SELLER_IBAN:-}
+    ports:
+      - "5001:5000"
+    networks:
+      - docker-project_default
+
+networks:
+  docker-project_default:
+    external: true
