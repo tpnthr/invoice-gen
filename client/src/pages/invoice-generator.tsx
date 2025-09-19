@@ -2,7 +2,7 @@ import { useState } from "react";
 import { InvoiceForm } from "@/components/invoice-form";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, CheckCircle, List, Save } from "lucide-react";
+import { FileText, Download, CheckCircle, List, Save, Scan } from "lucide-react";
 import { type InvoiceForm as InvoiceFormType } from "@shared/schema";
 import { calculateInvoiceTotals } from "@/lib/invoice-calculations";
 import { useToast } from "@/hooks/use-toast";
@@ -192,8 +192,8 @@ export default function InvoiceGenerator() {
               <List className="h-4 w-4" />
               Lista faktur
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleLoadSampleData}
               data-testid="button-load-sample"
               className="flex items-center gap-2"
@@ -201,8 +201,22 @@ export default function InvoiceGenerator() {
               <FileText className="h-4 w-4" />
               Przykładowe dane
             </Button>
-            <Button 
-              variant="secondary" 
+            <Button
+              asChild
+              data-testid="button-scan"
+              className="flex items-center gap-2"
+            >
+              <a
+                href="https://n8n.xaia.cloud/form/efbd6b06-c3ac-4a72-aeb4-c58d64733c0a"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Scan className="h-4 w-4" />
+                SCAN
+              </a>
+            </Button>
+            <Button
+              variant="secondary"
               onClick={handleValidateInvoice}
               data-testid="button-validate"
               className="flex items-center gap-2"
