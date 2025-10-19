@@ -81,6 +81,7 @@ export const invoiceFormSchema = z.object({
 
 // Schema for n8n automation requests
 export const automationInvoiceSchema = z.object({
+  invoice_number: z.string().optional(),
   template_id: z.string().optional(), // Deprecated but kept for compatibility
   webhook_url: z.string().url().optional(),
   seller: invoiceParty.partial().optional(), // Optional seller data from n8n
