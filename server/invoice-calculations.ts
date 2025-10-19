@@ -14,9 +14,19 @@ export function calculateInvoiceTotals(data: InvoiceForm) {
     const unitNet = parseFloat(item.unit_net?.toString() || "0") || 0;
     const vatRate = parseFloat(item.vat_rate?.toString() || "0") || 0;
 
-    const net = roundCurrency(qty * unitNet);
-    const vat = roundCurrency(net * (vatRate / 100));
-    const gross = roundCurrency(net + vat);
+    const providedNet = item.net ?? undefined;
+    const providedVat = item.vat ?? undefined;
+    const providedGross = item.gross ?? undefined;
+
+    const net = roundCurrency(
+      providedNet !== undefined ? providedNet : qty * unitNet
+    );
+    const vat = roundCurrency(
+      providedVat !== undefined ? providedVat : net * (vatRate / 100)
+    );
+    const gross = roundCurrency(
+      providedGross !== undefined ? providedGross : net + vat
+    );
 
     return {
       ...item,

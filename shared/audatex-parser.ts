@@ -101,11 +101,22 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
   const items: InvoiceItem[] = [];
 
   const addItem = (item: InvoiceItem) => {
+    const qty = Number.isFinite(item.qty) ? item.qty : 0;
+    const unitNet = Number.isFinite(item.unit_net) ? item.unit_net : 0;
+    const vatRate = Number.isFinite(item.vat_rate) ? item.vat_rate : normalizedVatRate;
+
+    const net = roundCurrency(item.net ?? qty * unitNet);
+    const vat = roundCurrency(item.vat ?? net * (vatRate / 100));
+    const gross = roundCurrency(item.gross ?? net + vat);
+
     items.push({
       ...item,
-      qty: roundCurrency(item.qty),
-      unit_net: roundCurrency(item.unit_net),
-      vat_rate: roundCurrency(item.vat_rate),
+      qty,
+      unit_net: roundCurrency(unitNet),
+      vat_rate: roundCurrency(vatRate),
+      net,
+      vat,
+      gross,
     });
   };
 
@@ -119,7 +130,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     const qty = parseNumber(part?.Qty?.Val) ?? 1;
     const quantity = qty > 0 ? qty : 1;
     const uom = part?.Qty?.Unit || "szt";
-    const unitNet = quantity ? roundCurrency(total / quantity) : roundCurrency(total);
+    const unitNet = quantity ? total / quantity : total;
 
     addItem({
       name: String(part?.PartDesc || part?.PartNo || "Część"),
@@ -128,6 +139,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
       uom,
       unit_net: unitNet,
       vat_rate: normalizedVatRate,
+      net: roundCurrency(total),
     });
   });
 
@@ -141,6 +153,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
       uom: "usł",
       unit_net: sundryAmount,
       vat_rate: normalizedVatRate,
+      net: roundCurrency(sundryAmount),
     });
   }
 
@@ -154,7 +167,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     if (total <= 0) return;
     const qty = quantity && quantity > 0 ? quantity : 1;
     const uom = unit || "usł";
-    const unitNet = qty ? roundCurrency(total / qty) : total;
+    const unitNet = qty ? total / qty : total;
 
     addItem({
       name: label,
@@ -163,6 +176,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
       uom,
       unit_net: unitNet,
       vat_rate: normalizedVatRate,
+      net: total,
     });
   };
 
