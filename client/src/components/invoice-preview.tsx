@@ -8,7 +8,6 @@ interface InvoicePreviewProps {
     calculatedItems: Array<{
       name: string;
       code?: string;
-      kjc?: string;
       qty: number;
       uom: string;
       unit_net: number;
@@ -133,9 +132,8 @@ export function InvoicePreview({ data }: InvoicePreviewProps) {
             <thead>
               <tr>
                 <th style={{ width: "28px" }}>Lp</th>
-                <th style={{ width: "22%" }}>Nazwa</th>
+                <th style={{ width: "26%" }}>Nazwa</th>
                 <th style={{ width: "11%" }}>Kod</th>
-                <th style={{ width: "9%" }}>KJC</th>
                 <th style={{ width: "7%" }} className="center">
                   Ilość
                 </th>
@@ -176,7 +174,6 @@ export function InvoicePreview({ data }: InvoicePreviewProps) {
                     <td className="center">{index + 1}</td>
                     <td>{item.name || ""}</td>
                     <td className="mono">{item.code || ""}</td>
-                    <td className="mono">{item.kjc || ""}</td>
                     <td className="center">{item.qty || ""}</td>
                     <td className="center">{item.uom || ""}</td>
                     <td className="num">{formatCurrency(item.unit_net)}</td>
@@ -191,7 +188,6 @@ export function InvoicePreview({ data }: InvoicePreviewProps) {
                   <td className="center">1</td>
                   <td>Przykładowa usługa</td>
                   <td className="mono">SRV001</td>
-                  <td className="mono">O</td>
                   <td className="center">1</td>
                   <td className="center">szt</td>
                   <td className="num">100,00</td>

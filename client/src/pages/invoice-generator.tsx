@@ -32,7 +32,6 @@ export default function InvoiceGenerator() {
     items: [{
       name: "",
       code: "",
-      kjc: "",
       qty: 0,
       uom: "",
       unit_net: 0,
@@ -102,7 +101,6 @@ export default function InvoiceGenerator() {
         {
           name: "Naprawa układu hamulcowego",
           code: "SRV001",
-          kjc: "O",
           qty: 1,
           uom: "usł",
           unit_net: 850.00,
@@ -111,7 +109,6 @@ export default function InvoiceGenerator() {
         {
           name: "Wymiana oleju silnikowego",
           code: "SRV002",
-          kjc: "Q",
           qty: 1,
           uom: "usł",
           unit_net: 120.00,

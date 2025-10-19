@@ -34,7 +34,6 @@ export default function InvoiceEdit() {
     items: [{
       name: "",
       code: "",
-      kjc: "",
       qty: 0,
       uom: "",
       unit_net: 0,
@@ -93,14 +92,22 @@ export default function InvoiceEdit() {
           address_line_1: "",
           address_line_2: "",
         },
-        items: Array.isArray(invoice.items) ? invoice.items.map((item: any) => ({
-          ...item,
-          kjc: item.kjc || item.cn_pkwiu || "", // Handle both old and new field names
-          cn_pkwiu: undefined // Remove old field
-        })) : [{
+        items: Array.isArray(invoice.items) ? invoice.items.map((item: any) => {
+          const { kjc: _kjc, cn_pkwiu: _cnPkwiu, ...rest } = item || {};
+          return {
+            name: rest.name || "",
+            code: rest.code || "",
+            qty: rest.qty || 0,
+            uom: rest.uom || "",
+            unit_net: rest.unit_net || 0,
+            vat_rate: rest.vat_rate || 23,
+            net: rest.net,
+            vat: rest.vat,
+            gross: rest.gross,
+          };
+        }) : [{
           name: "",
           code: "",
-          kjc: "",
           qty: 0,
           uom: "",
           unit_net: 0,
