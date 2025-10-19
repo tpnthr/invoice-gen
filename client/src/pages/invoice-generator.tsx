@@ -2,13 +2,16 @@ import { useState } from "react";
 import { InvoiceForm } from "@/components/invoice-form";
 import { InvoicePreview } from "@/components/invoice-preview";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, CheckCircle, List, Save, Scan } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { FileText, Download, CheckCircle, List, Save, Scan, UploadCloud } from "lucide-react";
 import { type InvoiceForm as InvoiceFormType } from "@shared/schema";
 import { calculateInvoiceTotals } from "@/lib/invoice-calculations";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { convertAudatexToInvoice } from "@/lib/audatex-parser";
 
 export default function InvoiceGenerator() {
   const [, setLocation] = useLocation();
@@ -51,6 +54,8 @@ export default function InvoiceGenerator() {
   });
 
   const { toast } = useToast();
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importJson, setImportJson] = useState("");
 
   const createMutation = useMutation({
     mutationFn: async (data: InvoiceFormType) => {
@@ -167,6 +172,37 @@ export default function InvoiceGenerator() {
     window.print();
   };
 
+  const handleImportAudatex = () => {
+    if (!importJson.trim()) {
+      toast({
+        title: "Brak danych",
+        description: "Wklej odpowiedź JSON przed importem.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(importJson);
+      const updated = convertAudatexToInvoice(parsed, invoiceData);
+      setInvoiceData(updated);
+      setImportDialogOpen(false);
+      setImportJson("");
+      toast({
+        title: "Import zakończony",
+        description: "Pozycje z kalkulacji zostały dodane do faktury.",
+      });
+    } catch (error) {
+      console.error("Błąd importu Audatex", error);
+      const message = error instanceof Error ? error.message : "Nie udało się przetworzyć danych";
+      toast({
+        title: "Błąd importu",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const calculatedData = calculateInvoiceTotals(invoiceData);
 
   return (
@@ -201,6 +237,44 @@ export default function InvoiceGenerator() {
               <FileText className="h-4 w-4" />
               Przykładowe dane
             </Button>
+            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  data-testid="button-import-audatex"
+                  className="flex items-center gap-2"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  Import JSON
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Import z kalkulacji Audatex</DialogTitle>
+                  <DialogDescription>
+                    Wklej pełną odpowiedź JSON z API Audatex, aby utworzyć edytowalny szkic faktury.
+                  </DialogDescription>
+                </DialogHeader>
+                <Textarea
+                  value={importJson}
+                  onChange={(event) => setImportJson(event.target.value)}
+                  className="font-mono text-sm min-h-[260px]"
+                  placeholder="Wklej tutaj dane JSON"
+                />
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setImportDialogOpen(false)}
+                  >
+                    Anuluj
+                  </Button>
+                  <Button type="button" onClick={handleImportAudatex}>
+                    Importuj
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Button
               asChild
               data-testid="button-scan"
