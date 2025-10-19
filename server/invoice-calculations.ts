@@ -1,4 +1,4 @@
-import { type InvoiceForm, type InvoiceItem } from "@shared/schema";
+import { type InvoiceForm } from "@shared/schema";
 
 const roundCurrency = (value: number) => {
   if (!Number.isFinite(value)) {
@@ -7,26 +7,38 @@ const roundCurrency = (value: number) => {
   return Math.round(value * 100) / 100;
 };
 
+const parseOptionalNumber = (value: unknown): number | undefined => {
+  if (value === null || value === undefined) return undefined;
+  const num = typeof value === "number" ? value : Number.parseFloat(String(value));
+  return Number.isFinite(num) ? num : undefined;
+};
+
 export function calculateInvoiceTotals(data: InvoiceForm) {
+  let totalVatRaw = 0;
+
   // Calculate item totals
   const calculatedItems = data.items.map(item => {
-    const qty = parseFloat(item.qty?.toString() || "0") || 0;
-    const unitNet = parseFloat(item.unit_net?.toString() || "0") || 0;
-    const vatRate = parseFloat(item.vat_rate?.toString() || "0") || 0;
+    const qty = parseOptionalNumber(item.qty) ?? 0;
+    const unitNet = parseOptionalNumber(item.unit_net) ?? 0;
+    const vatRate = parseOptionalNumber(item.vat_rate) ?? 0;
 
-    const providedNet = item.net ?? undefined;
-    const providedVat = item.vat ?? undefined;
-    const providedGross = item.gross ?? undefined;
+    const providedNet = parseOptionalNumber(item.net);
+    const providedVat = parseOptionalNumber(item.vat);
+    const providedGross = parseOptionalNumber(item.gross);
 
-    const net = roundCurrency(
-      providedNet !== undefined ? providedNet : qty * unitNet
-    );
-    const vat = roundCurrency(
-      providedVat !== undefined ? providedVat : net * (vatRate / 100)
-    );
-    const gross = roundCurrency(
-      providedGross !== undefined ? providedGross : net + vat
-    );
+    const rawNet = providedNet ?? qty * unitNet;
+    const rawVat =
+      providedVat ??
+      (providedGross !== undefined && providedNet !== undefined
+        ? providedGross - providedNet
+        : rawNet * (vatRate / 100));
+    const rawGross = providedGross ?? rawNet + rawVat;
+
+    totalVatRaw += Number.isFinite(rawVat) ? rawVat : 0;
+
+    const net = roundCurrency(rawNet);
+    const vat = roundCurrency(rawVat);
+    const gross = roundCurrency(rawGross);
 
     return {
       ...item,
@@ -40,19 +52,18 @@ export function calculateInvoiceTotals(data: InvoiceForm) {
   });
 
   // Calculate totals
-  const totalsInCents = calculatedItems.reduce(
-    (acc, item) => ({
-      net: acc.net + Math.round((item.net ?? 0) * 100),
-      vat: acc.vat + Math.round((item.vat ?? 0) * 100),
-      gross: acc.gross + Math.round((item.gross ?? 0) * 100),
-    }),
-    { net: 0, vat: 0, gross: 0 }
+  const totalNetInCents = calculatedItems.reduce(
+    (acc, item) => acc + Math.round((item.net ?? 0) * 100),
+    0
   );
 
+  const totalNet = roundCurrency(totalNetInCents / 100);
+  const totalVat = roundCurrency(totalVatRaw);
+
   const totals = {
-    net: roundCurrency(totalsInCents.net / 100),
-    vat: roundCurrency(totalsInCents.vat / 100),
-    gross: roundCurrency(totalsInCents.gross / 100),
+    net: totalNet,
+    vat: totalVat,
+    gross: roundCurrency(totalNet + totalVat),
   };
 
   return {
