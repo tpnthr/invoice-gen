@@ -47,8 +47,17 @@ export function InvoiceForm({ data, onChange }: InvoiceFormProps) {
       current[arrayName][index] = value;
     } else {
       current[finalKey] = value;
+
+      if (
+        (finalKey === 'qty' || finalKey === 'unit_net' || finalKey === 'vat_rate') &&
+        current && typeof current === 'object'
+      ) {
+        delete current.net;
+        delete current.vat;
+        delete current.gross;
+      }
     }
-    
+
     onChange(newData);
   };
 
