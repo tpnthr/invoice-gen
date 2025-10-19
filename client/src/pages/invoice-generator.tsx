@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, Download, CheckCircle, List, Save, Scan, UploadCloud } from "lucide-react";
 import { type InvoiceForm as InvoiceFormType } from "@shared/schema";
+import { DEFAULT_SELLER } from "@shared/defaults";
 import { calculateInvoiceTotals } from "@/lib/invoice-calculations";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -21,16 +22,7 @@ export default function InvoiceGenerator() {
     delivery_date: new Date().toISOString().split('T')[0],
     issue_place: "",
     copy_type: "ORYGINAŁ",
-    seller: {
-      name: "",
-      nip: "",
-      address_line_1: "",
-      address_line_2: "",
-      phone: "",
-      bank_name: "",
-      bank_branch_address: "",
-      iban: "",
-    },
+    seller: { ...DEFAULT_SELLER },
     buyer: {
       name: "",
       nip: "",
