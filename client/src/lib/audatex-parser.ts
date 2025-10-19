@@ -32,6 +32,13 @@ const normalizeArray = <T>(input: T | T[] | undefined | null): T[] => {
   return Array.isArray(input) ? input : [input];
 };
 
+const cleanText = (value: unknown): string | undefined => {
+  if (typeof value !== "string") return undefined;
+  const withoutBracketCodes = value.replace(/\[[^\]]*\]/g, " ");
+  const normalized = withoutBracketCodes.replace(/\s+/g, " ").trim();
+  return normalized || undefined;
+};
+
 export function convertAudatexToInvoice(payload: unknown, base: InvoiceForm): InvoiceForm {
   const invoice: InvoiceForm = JSON.parse(JSON.stringify(base));
   invoice.items = [];
@@ -45,6 +52,30 @@ export function convertAudatexToInvoice(payload: unknown, base: InvoiceForm): In
   const calculation = firstEntry["Calculation"] as Record<string, any> | undefined;
   if (!calculation) {
     throw new Error("Brak sekcji Calculation w danych");
+  }
+
+  const claimId = cleanText(firstEntry["ClaimID"]);
+  if (claimId) {
+    invoice.claim_number = claimId;
+  }
+
+  const vehicleData = firstEntry["Vehicle"] as Record<string, unknown> | undefined;
+  if (vehicleData && typeof vehicleData === "object") {
+    const identification = vehicleData["VehicleIdentification"] as Record<string, unknown> | undefined;
+    const admin = vehicleData["VehicleAdmin"] as Record<string, unknown> | undefined;
+
+    const manufacturer = cleanText(identification?.["ManufacturerName"]);
+    const subModel = cleanText(identification?.["SubModelName"]);
+    const model = cleanText(identification?.["ModelName"]);
+    const plateNumber = cleanText(admin?.["PlateNumber"]);
+
+    const vehicleParts = [manufacturer, subModel || model, plateNumber].filter(
+      (part): part is string => Boolean(part)
+    );
+
+    if (vehicleParts.length > 0) {
+      invoice.vehicle = vehicleParts.join(" ");
+    }
   }
 
   const finalCalc = calculation["FinalCalc"] ?? {};
