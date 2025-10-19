@@ -1,4 +1,5 @@
 import { type InvoiceForm } from "@shared/schema";
+import { DEFAULT_SELLER } from "@shared/defaults";
 import { formatCurrency } from "@/lib/invoice-calculations";
 import { numberToWords } from "@/lib/number-to-words";
 
@@ -31,72 +32,43 @@ interface InvoicePreviewProps {
 }
 
 export function InvoicePreview({ data }: InvoicePreviewProps) {
+  const seller = {
+    ...DEFAULT_SELLER,
+    ...data.seller,
+  };
+
+  const invoiceNumber = data.invoice_number || "000/2024/001";
+  const copyType = data.copy_type || "ORYGINAŁ";
+  const issuePlace = data.issue_place || "Warszawa";
+  const issueDate = data.issue_date || "2024-01-01";
+  const deliveryDate = data.delivery_date || "2024-01-01";
+
   return (
     <div className="invoice-preview" data-testid="invoice-preview">
       <div className="doc">
         {/* Header */}
         <header className="header">
-          <section className="brand">
-            <h2 data-testid="preview-seller-name">
-              {data.seller.name || "Nazwa firmy"}
-            </h2>
-            <div className="meta">
-              <div data-testid="preview-seller-address1">
-                {data.seller.address_line_1 || "Adres firmy"}
-              </div>
-              <div data-testid="preview-seller-address2">
-                {data.seller.address_line_2 || "Kod, Miasto"}
-              </div>
-              <div>
-                Tel.: <span data-testid="preview-seller-phone">
-                  {data.seller.phone || "+48 000 000 000"}
-                </span>
-                <span className="nowrap">
-                  &nbsp; NIP: <span data-testid="preview-seller-nip">
-                    {data.seller.nip || "000-000-00-00"}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span data-testid="preview-seller-bank">
-                  {data.seller.bank_name || "Bank"}
-                </span>; 
-                <span data-testid="preview-seller-bank-address">
-                  {data.seller.bank_branch_address || "Adres banku"}
-                </span>
-              </div>
-              <div className="mono" data-testid="preview-seller-iban">
-                {data.seller.iban || "PL00 0000 0000 0000 0000 0000 0000"}
-              </div>
-            </div>
-          </section>
           <section className="invoice-tag">
             <h1>
               Faktura VAT{" "}
               <span className="mono" data-testid="preview-invoice-number">
-                {data.invoice_number || "000/2024/001"}
+                {invoiceNumber}
               </span>{" "}
               <small className="muted">
-                {data.copy_type || "ORYGINAŁ"}
+                {copyType}
               </small>
             </h1>
             <div className="copy muted">
               Miejsce wystawienia:{" "}
-              <b data-testid="preview-issue-place">
-                {data.issue_place || "Warszawa"}
-              </b>
+              <b data-testid="preview-issue-place">{issuePlace}</b>
             </div>
             <div className="copy muted">
               Data wystawienia:{" "}
-              <b data-testid="preview-issue-date">
-                {data.issue_date || "2024-01-01"}
-              </b>
+              <b data-testid="preview-issue-date">{issueDate}</b>
             </div>
             <div className="copy muted">
               Data zakończenia dostawy/usług:{" "}
-              <b data-testid="preview-delivery-date">
-                {data.delivery_date || "2024-01-01"}
-              </b>
+              <b data-testid="preview-delivery-date">{deliveryDate}</b>
             </div>
           </section>
         </header>
@@ -106,21 +78,31 @@ export function InvoicePreview({ data }: InvoicePreviewProps) {
           <div className="card">
             <h3>Sprzedawca</h3>
             <p>
-              <b data-testid="preview-seller-name-card">
-                {data.seller.name || "Nazwa firmy"}
-              </b>
+              <b data-testid="preview-seller-name-card">{seller.name}</b>
+            </p>
+            <p data-testid="preview-seller-address1-card">
+              {seller.address_line_1}
+              {seller.address_line_2 ? `, ${seller.address_line_2}` : ""}
+            </p>
+            <p>
+              Tel.: <span data-testid="preview-seller-phone">{seller.phone}</span>
             </p>
             <p>
               NIP:{" "}
               <span className="mono" data-testid="preview-seller-nip-card">
-                {data.seller.nip || "000-000-00-00"}
+                {seller.nip}
               </span>
             </p>
-            <p data-testid="preview-seller-address1-card">
-              {data.seller.address_line_1 || "Adres firmy"}
+            <p>
+              <span data-testid="preview-seller-bank">{seller.bank_name}</span>
             </p>
-            <p data-testid="preview-seller-address2-card">
-              {data.seller.address_line_2 || "Kod, Miasto"}
+            <p>
+              <span data-testid="preview-seller-bank-address">
+                {seller.bank_branch_address}
+              </span>
+            </p>
+            <p className="mono" data-testid="preview-seller-iban">
+              {seller.iban}
             </p>
           </div>
           <div className="card">
@@ -225,7 +207,6 @@ export function InvoicePreview({ data }: InvoicePreviewProps) {
 
         {/* Totals & VAT summary */}
         <section className="totals-wrap">
-          <div></div>
           <aside>
             <table className="vat-summary">
               <thead>

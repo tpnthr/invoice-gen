@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save, FileText, Download } from "lucide-react";
 import { type InvoiceForm as InvoiceFormType } from "@shared/schema";
+import { DEFAULT_SELLER } from "@shared/defaults";
 import { calculateInvoiceTotals } from "@/lib/invoice-calculations";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -23,12 +24,7 @@ export default function InvoiceEdit() {
     delivery_date: new Date().toISOString().split('T')[0],
     issue_place: "",
     copy_type: "ORYGINAŁ",
-    seller: {
-      name: "",
-      nip: "",
-      address_line_1: "",
-      address_line_2: "",
-    },
+    seller: { ...DEFAULT_SELLER },
     buyer: {
       name: "",
       nip: "",
@@ -88,12 +84,9 @@ export default function InvoiceEdit() {
         delivery_date: invoice.delivery_date,
         issue_place: invoice.issue_place,
         copy_type: invoice.copy_type || "ORYGINAŁ",
-        seller: typeof invoice.seller === 'object' ? invoice.seller : {
-          name: "",
-          nip: "",
-          address_line_1: "",
-          address_line_2: "",
-        },
+        seller: typeof invoice.seller === 'object'
+          ? { ...DEFAULT_SELLER, ...invoice.seller }
+          : { ...DEFAULT_SELLER },
         buyer: typeof invoice.buyer === 'object' ? invoice.buyer : {
           name: "",
           nip: "",
