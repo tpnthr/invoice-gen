@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertInvoiceSchema, automationInvoiceSchema } from "@shared/schema";
+import { parseAudatexPayload } from "./audatex-parser";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -85,7 +86,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // === N8N AUTOMATION ENDPOINTS ===
-  
+
+  app.post("/api/invoices/from-automation/audatex", async (req, res) => {
+    try {
+      const expectedSecret = process.env.AUTOMATION_SECRET;
+      if (!expectedSecret) {
+        return res.status(503).json({ message: "Service unavailable - AUTOMATION_SECRET not configured" });
+      }
+
+      const secret = req.headers['x-automation-secret'];
+      if (String(secret) !== String(expectedSecret)) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const parsedPayload = parseAudatexPayload(req.body);
+      const validatedData = automationInvoiceSchema.parse(parsedPayload);
+      const hostUrl = `${req.protocol}://${req.get('host')}`;
+      const result = await storage.createInvoiceFromAutomation(validatedData, hostUrl);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({
+        message: "Failed to process Audatex payload",
+      });
+    }
+  });
+
   // Create invoice from automation (n8n webhook endpoint)
   app.post("/api/invoices/from-automation", async (req, res) => {
     try {

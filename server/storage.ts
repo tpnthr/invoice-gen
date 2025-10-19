@@ -183,8 +183,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Generate unique invoice number if not provided
-    const invoiceNumber = `AUTO/${new Date().getFullYear()}/${Date.now()}`;
-    
+    const providedInvoiceNumber = typeof data.invoice_number === 'string' ? data.invoice_number.trim() : '';
+    const invoiceNumber = providedInvoiceNumber.length > 0
+      ? providedInvoiceNumber
+      : `AUTO/${new Date().getFullYear()}/${Date.now()}`;
+
     const invoiceData: InsertInvoice = {
       invoice_number: invoiceNumber,
       issue_date: new Date().toISOString().split('T')[0],
