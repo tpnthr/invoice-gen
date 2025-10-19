@@ -163,7 +163,6 @@ export class DatabaseStorage implements IStorage {
       items = data.items.map(item => ({
         name: item.name || "Usługa",
         code: item.code,
-        kjc: item.kjc,
         qty: item.qty || 1,
         uom: item.uom || "szt",
         unit_net: item.unit_net || 0,
@@ -174,7 +173,6 @@ export class DatabaseStorage implements IStorage {
       items = [{
         name: "Usługa",
         code: "",
-        kjc: "",
         qty: 1,
         uom: "szt",
         unit_net: 0,

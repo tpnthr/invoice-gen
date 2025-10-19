@@ -6,7 +6,6 @@ import { z } from "zod";
 export const invoiceItems = z.object({
   name: z.string().min(1, "Nazwa jest wymagana"),
   code: z.string().optional(),
-  kjc: z.string().optional(),
   qty: z.number().min(0, "Ilość musi być większa od 0"),
   uom: z.string().min(1, "Jednostka miary jest wymagana"),
   unit_net: z.number().min(0, "Cena netto musi być większa od 0"),

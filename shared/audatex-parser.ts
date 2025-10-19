@@ -124,7 +124,6 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     addItem({
       name: String(part?.PartDesc || part?.PartNo || "Część"),
       code: part?.PartNo || "",
-      kjc: part?.RepTyp || "",
       qty: quantity,
       uom,
       unit_net: unitNet,
@@ -138,7 +137,6 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     addItem({
       name: "Materiały dodatkowe (FCSundry)",
       code: "",
-      kjc: "",
       qty: 1,
       uom: "usł",
       unit_net: sundryAmount,
@@ -161,7 +159,6 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     addItem({
       name: label,
       code: "",
-      kjc: "",
       qty,
       uom,
       unit_net: unitNet,

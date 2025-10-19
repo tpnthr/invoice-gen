@@ -57,7 +57,6 @@ export function InvoiceForm({ data, onChange }: InvoiceFormProps) {
     newData.items.push({
       name: "",
       code: "",
-      kjc: "",
       qty: 0,
       uom: "",
       unit_net: 0,
@@ -346,24 +345,6 @@ export function InvoiceForm({ data, onChange }: InvoiceFormProps) {
                       className="font-mono"
                       data-testid={`input-item-code-${index}`}
                     />
-                  </div>
-                  <div>
-                    <Label>Klasa jakości części : KJC</Label>
-                    <Select 
-                      value={item.kjc || ""} 
-                      onValueChange={(value) => updateField(`items[${index}].kjc`, value)}
-                    >
-                      <SelectTrigger data-testid={`select-item-kjc-${index}`}>
-                        <SelectValue placeholder="Wybierz klasę" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="O">O</SelectItem>
-                        <SelectItem value="Q">Q</SelectItem>
-                        <SelectItem value="PC">PC</SelectItem>
-                        <SelectItem value="PJ">PJ</SelectItem>
-                        <SelectItem value="Z">Z</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                   <div>
                     <Label>Ilość</Label>
