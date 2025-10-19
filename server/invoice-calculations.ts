@@ -40,14 +40,20 @@ export function calculateInvoiceTotals(data: InvoiceForm) {
   });
 
   // Calculate totals
-  const totals = calculatedItems.reduce(
+  const totalsInCents = calculatedItems.reduce(
     (acc, item) => ({
-      net: roundCurrency(acc.net + item.net),
-      vat: roundCurrency(acc.vat + item.vat),
-      gross: roundCurrency(acc.gross + item.gross),
+      net: acc.net + Math.round(item.net * 100),
+      vat: acc.vat + Math.round(item.vat * 100),
+      gross: acc.gross + Math.round(item.gross * 100),
     }),
     { net: 0, vat: 0, gross: 0 }
   );
+
+  const totals = {
+    net: roundCurrency(totalsInCents.net / 100),
+    vat: roundCurrency(totalsInCents.vat / 100),
+    gross: roundCurrency(totalsInCents.gross / 100),
+  };
 
   return {
     ...data,
