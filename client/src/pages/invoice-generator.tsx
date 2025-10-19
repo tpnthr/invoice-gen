@@ -270,7 +270,7 @@ export default function InvoiceGenerator() {
               className="flex items-center gap-2"
             >
               <a
-                href="https://n8n.xaia.cloud/form/efbd6b06-c3ac-4a72-aeb4-c58d64733c0a"
+                href="https://n8n.xaia.cloud/form/472165a9-1861-4310-99a2-bc00f7e97e2b"
                 target="_blank"
                 rel="noopener noreferrer"
               >
