@@ -98,9 +98,10 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     23;
   const normalizedVatRate = roundCurrency(vatRate);
 
-  const items: InvoiceItem[] = [];
+  const serviceItems: InvoiceItem[] = [];
+  const partItems: InvoiceItem[] = [];
 
-  const addItem = (item: InvoiceItem) => {
+  const addItem = (target: InvoiceItem[], item: InvoiceItem) => {
     const qty = Number.isFinite(item.qty) ? item.qty : 0;
     const unitNet = Number.isFinite(item.unit_net) ? item.unit_net : 0;
     const vatRate = Number.isFinite(item.vat_rate) ? item.vat_rate : normalizedVatRate;
@@ -109,7 +110,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     const vat = roundCurrency(item.vat ?? net * (vatRate / 100));
     const gross = roundCurrency(item.gross ?? net + vat);
 
-    items.push({
+    target.push({
       ...item,
       qty,
       unit_net: roundCurrency(unitNet),
@@ -132,7 +133,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     const uom = part?.Qty?.Unit || "szt";
     const unitNet = quantity ? total / quantity : total;
 
-    addItem({
+    addItem(partItems, {
       name: String(part?.PartDesc || part?.PartNo || "Część"),
       code: part?.PartNo || "",
       qty: quantity,
@@ -146,7 +147,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
   // Sundry / percentage of parts (if present)
   const sundryAmount = parseCurrency(finalCalc?.FCPart?.FCSundry?.PCofParts?.PCofPart?.Amnt?._);
   if (sundryAmount > 0) {
-    addItem({
+    addItem(serviceItems, {
       name: "Materiały dodatkowe (FCSundry)",
       code: "",
       qty: 1,
@@ -169,7 +170,7 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     const uom = unit || "usł";
     const unitNet = qty ? total / qty : total;
 
-    addItem({
+    addItem(serviceItems, {
       name: label,
       code: "",
       qty,
@@ -207,6 +208,8 @@ export function parseAudatexData(payload: unknown): ParsedAudatexData {
     calculation?.Paint?.PaintPreparations?.PntPrep?.HrNo?.Unit ||
     "h";
   addServiceItem("Lakierowanie", paintTotal, paintHours, paintUnit);
+
+  const items = [...serviceItems, ...partItems];
 
   if (items.length === 0) {
     throw new Error("Nie znaleziono pozycji do zaimportowania");
